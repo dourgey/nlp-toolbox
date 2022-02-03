@@ -20,7 +20,7 @@ def dict_to_json(obj: dict or list) -> str:
     :param obj: 字典
     :return: JSON
     """
-    return json.dumps(obj, ensure_ascii=False)
+    return json.dumps(obj, ensure_ascii=False, indent=4)
 
 
 def json_to_obj(json_str: str) -> SimpleNamespace:
