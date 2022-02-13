@@ -16,15 +16,16 @@ class Trainer:
         self.num_epoch = num_epoch
         self.early_stop = early_stop
         self.device = device
-        self.step = 0
+        self.total_step = 0
         self.model.to(device)
+
 
 
     def train(self):
         self.model.train()
         for epoch in tqdm.tqdm(range(self.num_epoch)):
             for x, y in self.train_loader:
-                self.step += 1
+                self.total_step += 1
                 x = x.to(self.device)
                 y = y.to(self.device)
 
