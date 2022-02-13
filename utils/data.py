@@ -47,15 +47,18 @@ class ClassificationBasePreProcessor(IPreProcessor):
     由于要兼容之前的格式，注意对之前格式进行处理，例如__call__()函数的前两行
     """
     def __init__(self, label_list, max_seq_length, tokenizer):
+        """
+
+        :param label_list: dict of label discription like {}
+        :param max_seq_length:
+        :param tokenizer:
+        """
         super(ClassificationBasePreProcessor, self).__init__()
         self.label_list = label_list
         self.max_seq_length = max_seq_length
         self.tokenizer = tokenizer
 
     def __call__(self, data: List[SimpleNamespace]) -> List[DataEntity]:
-        label_map = {}
-        for (i, label) in enumerate(self.label_list):
-            label_map[label] = i
         data_entities = []
         for example in data:
             inputs = self.tokenizer.tokenize(example.inputs)
@@ -70,7 +73,7 @@ class ClassificationBasePreProcessor(IPreProcessor):
                 input_ids.append(0)
                 input_mask.append(0)
                 segment_ids.append(0)
-            target = 0 if "predict_label" == example.targets else label_map[example.targets]
+            target = 0 if "predict_label" == example.labels else self.label_list[example.labels]
             data_entities.append(
                 DataEntity(inputs=input_ids, target=target, input_mask=input_mask, segment_ids=segment_ids))
         return data_entities
