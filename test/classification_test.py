@@ -21,7 +21,7 @@ def evaluate(model, test_loader):
     pred_y = []  # 预测值
     label_score = []
     with torch.no_grad():
-        for inputs, input_mask, segment_ids, targets in tqdm.tqdm(test_loader):
+        for inputs, input_mask, segment_ids, targets in test_loader:
             inputs = inputs.to(device)
             input_mask = input_mask.to(device)
             segment_ids = segment_ids.to(device)
@@ -35,6 +35,7 @@ def evaluate(model, test_loader):
             true_y += targets.cpu().tolist()
 
         report = classification_report(true_y, pred_y)
+        print()
         print(report)
         print("Test-Accuracy: ", accuracy_score(true_y, pred_y))
         print("Test-Precision: ", precision_score(true_y, pred_y, average='macro', labels=[0, 1, 2]))
@@ -53,7 +54,7 @@ test_file = "dataset/out_test.json"
 
 config = BertCNNConfig(3, None, 4, [3, 4, 5], from_pretrain="../test/distilbert/")
 model = DistillBertCNN(config).to(device)
-optimizer = Adam(model.parameters())
+optimizer = Adam(model.parameters(), lr=1e-5)
 critiron = torch.nn.CrossEntropyLoss()
 
 preprocessor = ClassificationBasePreProcessor({"0": 0, "1": 1, "2": 2}, 128, tokenizer)
@@ -71,7 +72,7 @@ def collate_fn(batch):
 
 train_loader = DataLoader(train_set, 32, True, collate_fn=collate_fn)
 test_loader = DataLoader(test_set, 32, True, collate_fn=collate_fn)
-epoch = 1
+epoch = 20
 loss_list = []
 for epoch in tqdm.tqdm(range(epoch)):
     model.train()
