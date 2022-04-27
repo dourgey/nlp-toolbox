@@ -8,6 +8,19 @@ from model.model_config import ModelConfig
 class TextCNNConfig(ModelConfig):
     def __init__(self, num_classes, n_vocab, embedding_dim, num_filters, filter_sizes: List[int],
                  dilation_rate: List[int], embedding_pretrained=None, dropout_prob=0.1, config_file=None):
+        """
+        TextCNN 模型参数，如需读取配置文件，请使用TextCNNConfig.from_config_file(config_path)
+
+        :param num_classes: 分为多少类
+        :param n_vocab: 词汇表大小
+        :param embedding_dim: 词嵌入维度
+        :param num_filters: 卷积核数量
+        :param filter_sizes: 卷积核尺寸
+        :param dilation_rate: 卷积核空洞率
+        :param embedding_pretrained:
+        :param dropout_prob: dropout概率
+        :param config_file: config文件路径
+        """
         super(TextCNNConfig, self).__init__(config_file)
         self.embedding_dim = embedding_dim
         self.n_vocab = n_vocab
