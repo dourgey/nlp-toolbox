@@ -33,3 +33,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 trainer = Trainer(train_loader, valid_loader, model, optimizer, nn.CrossEntropyLoss(), test_loader=test_loader, ckpt_path="ckpt/textcnn.ckpt", device="cpu", early_stop=True)
 
 trainer.train(10)
+
+
+evaluator = Evaluator(model, 'classification', task_config['label_list'], device="cpu")
+evaluator._classification_evaluate(test_loader)
