@@ -1,0 +1,6 @@
+train_data = '../test/iPhone/train.json'
+test_data = '../test/iPhone/test.json'
+valid_data = '../test/iPhone/dev.json'
+
+label_list = ["0", "1", "2"]
+max_seq_length = 128

@@ -1,6 +1,6 @@
 import os
 from utils.json_utils import *
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
 class ModelConfig():
     @abstractmethod
@@ -8,12 +8,16 @@ class ModelConfig():
         self.config_file = config_file
 
     def save(self, file: str) -> None:
-        open(file, 'w').write(dict_to_json(self.__dict__))
+        with open(file, 'w', encoding='utf-8') as f:
+            toml.dump(self.__dict__, f)
+
 
     @classmethod
     def from_config_file(cls, config_file):
         assert os.path.exists(config_file)
-        config = cls(**json_to_dict(open(config_file, 'r').read()))
+        with open(config_file, 'r', encoding='utf-8') as f:
+            config = toml.load(f)
+        config = cls(**config)
         return config
 
     def __str__(self):

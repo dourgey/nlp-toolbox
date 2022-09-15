@@ -1,0 +1,8 @@
+config_file = "../common/configs/textcnn.conf.toml"
+embedding_dim = 300
+n_vocab = 21128
+num_classes = 3
+num_filters = 64
+filter_sizes = [ 3, 4, 5]
+dilation_rate = [ 1, 1]
+dropout_prob = 0.1
