@@ -52,9 +52,8 @@ class IPreProcessor(metaclass=ABCMeta):
 class ClassificationBasePreProcessor(IPreProcessor):
     """
     基础文本分类PreProcessor
-    由于要兼容之前的格式，注意对之前格式进行处理，例如__call__()函数的前两行
     """
-    def __init__(self, label_list, max_seq_length, tokenizer):
+    def __init__(self, label_list, max_seq_length, tokenizer, **kwargs):
         """
         PreProcessor初始化
         :param label_list: dict of label discription like {}
@@ -74,6 +73,7 @@ class ClassificationBasePreProcessor(IPreProcessor):
         """
         data_entities = []
         for example in data:
+            context = example.inputs
             inputs = self.tokenizer.tokenize(example.inputs)
             if len(inputs) > self.max_seq_length - 2:
                 inputs = inputs[: self.max_seq_length - 2]
@@ -82,9 +82,9 @@ class ClassificationBasePreProcessor(IPreProcessor):
             input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
             input_mask = [1] * len(input_ids)
 
-            target = 0 if "predict_label" == example.labels else self.label_list[example.labels]
+            target = None if example.labels == "predict_label" else self.label_list[example.labels]
             data_entities.append(
-                DataEntity(inputs=input_ids, target=target, input_mask=input_mask, segment_ids=segment_ids))
+                DataEntity(inputs=input_ids, target=target, input_mask=input_mask, segment_ids=segment_ids, context=context))
         return data_entities
 
 
@@ -117,7 +117,7 @@ class NLPCollator:
 
 
 class NLPDataset(Dataset):
-    def __init__(self, input_file, preprocessor: IPreProcessor, tokenizer):
+    def __init__(self, input_file, preprocessor: IPreProcessor, tokenizer, is_predict=False):
         """
         用于nlp-toolbox的数据集类
 
@@ -130,6 +130,7 @@ class NLPDataset(Dataset):
         self.tokenizer = tokenizer
         data = self._read_json(input_file)
         self.data = preprocessor(data)
+        self.is_predict = is_predict
 
 
     @classmethod
@@ -159,9 +160,9 @@ class NLPDataset(Dataset):
 
 
 if __name__ == '__main__':
-    from transformers import BertTokenizer
+    from transformers import BertTokenizerFast
     train_file = '../test/iPhone/train.json'
-    tokenizer = BertTokenizer.from_pretrained('../test/distilbert')
+    tokenizer = BertTokenizerFast.from_pretrained('../test/distilbert')
     preprocessor = ClassificationBasePreProcessor(label_list=["0", "1", "2"], max_seq_length=128, tokenizer=tokenizer)
 
     train_set = NLPDataset(train_file, preprocessor, tokenizer)
