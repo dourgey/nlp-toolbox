@@ -1,90 +1,35 @@
+
+
+import toml
+import torch
+from torch import nn
+from torch.utils.data import DataLoader
+
 import sys
 sys.path.append("../")
-
-from utils.data import NLPDataset, ClassificationBasePreProcessor
-from model.bert_cnn import *
-from transformers import BertTokenizer, DistilBertTokenizerFast
-from torch.utils.data import DataLoader
-from torch.optim import Adam
-import torch
-from sklearn.metrics import classification_report, precision_score, \
-    recall_score, f1_score, accuracy_score, precision_recall_fscore_support
-device = "cuda"
+from model.textcnn import TextCNNConfig, TextCNN
+from utils.data import NLPDataset, ClassificationBasePreProcessor, NLPCollator
+from common.module.trainer import Trainer
+from common.module.evaluate import Evaluator
+from transformers import BertTokenizerFast
 
 
-# 评价标准
-def evaluate(model, test_loader):
-    model.eval()
-    model.to(device)
+with open("../common/configs/task.conf.toml", "r", encoding="utf-8") as f:
+    task_config = toml.load(f)
+print(task_config)
 
-    true_y = []  # 真实值
-    pred_y = []  # 预测值
-    label_score = []
-    with torch.no_grad():
-        for inputs, input_mask, segment_ids, targets in test_loader:
-            inputs = inputs.to(device)
-            input_mask = input_mask.to(device)
-            segment_ids = segment_ids.to(device)
-            targets = targets
-            x = {"input_ids": inputs, "attention_mask": input_mask}
+tokenizer = BertTokenizerFast("../recources/bert_vocab.txt")
 
-            logits = model(x)
-            label_score += torch.max(torch.softmax(logits, 1), dim=1)[0].cpu().tolist()
-            y_pred = torch.max(torch.softmax(logits, 1), dim=1)[1]
-            pred_y += y_pred.cpu().detach().tolist()
-            true_y += targets.cpu().tolist()
+# 读取数据
+train_data = NLPDataset("iPhone/train.json", ClassificationBasePreProcessor(tokenizer=tokenizer, **task_config), tokenizer=tokenizer)
+train_loader = DataLoader(train_data, batch_size=64, shuffle=True, collate_fn=NLPCollator.classificationBaseCollateFn)
+valid_data = NLPDataset("iPhone/dev.json", ClassificationBasePreProcessor(tokenizer=tokenizer, **task_config), tokenizer=tokenizer, is_predict=True)
+valid_loader = DataLoader(valid_data, batch_size=64, shuffle=False, collate_fn=NLPCollator.classificationBaseCollateFn)
+test_data = NLPDataset("iPhone/test.json", ClassificationBasePreProcessor(tokenizer=tokenizer, **task_config), tokenizer=tokenizer, is_predict=True)
+test_loader = DataLoader(test_data, batch_size=64, shuffle=False, collate_fn=NLPCollator.classificationBaseCollateFn)
 
-        report = classification_report(true_y, pred_y)
-        print()
-        print(report)
-        print("Test-Accuracy: ", accuracy_score(true_y, pred_y))
-        print("Test-Precision: ", precision_score(true_y, pred_y, average='macro', labels=[0, 1, 2]))
-        print("Test-Recall: ", recall_score(true_y, pred_y, average='macro', labels=[0, 1, 2]))
-        print("Test-F1 Score: ", f1_score(true_y, pred_y, average='macro', labels=[0, 1, 2]))
+model = TextCNN(TextCNNConfig.from_config_file("../common/configs/textcnn.conf.toml"))
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+trainer = Trainer(train_loader, valid_loader, model, optimizer, nn.CrossEntropyLoss(), test_loader=test_loader, ckpt_path="ckpt/textcnn.ckpt", device="cpu", early_stop=True)
 
-    # result = ["\t".join([str(label), str(score)]) for label, score in zip(pred_y, label_score)]
-    # with open('predict_result.txt', 'w', encoding='utf-8') as f:
-    #     f.write('\n'.join(result))
-
-bert_vocab = r'D:\Works\codes\voice_quality\voice_quality_labeling\voice-quality-labeling-srv\target\classes\config_online\label_config\hbgprivatecall\house\bert_vocab.txt'
-tokenizer = DistilBertTokenizerFast("../test/distilbert/vocab.txt")
-train_file = "dataset/out_train.json"
-valid_file = "dataset/out_dev.json"
-test_file = "dataset/out_test.json"
-
-config = BertCNNConfig(3, None, 4, [3, 4, 5], from_pretrain="../test/distilbert/")
-model = DistillBertCNN(config).to(device)
-optimizer = Adam(model.parameters(), lr=1e-5)
-critiron = torch.nn.CrossEntropyLoss()
-
-preprocessor = ClassificationBasePreProcessor({"0": 0, "1": 1, "2": 2}, 128, tokenizer)
-train_set = NLPDataset(train_file, preprocessor, tokenizer)
-test_set = NLPDataset(train_file, preprocessor, tokenizer)
-
-def collate_fn(batch):
-    inputs = torch.tensor([x.inputs for x in batch], dtype=torch.int32)
-    input_mask = torch.tensor([x.input_mask for x in batch], dtype=torch.int32)
-    segment_ids = torch.tensor([x.segment_ids for x in batch], dtype=torch.int32)
-    targets = torch.tensor([x.target for x in batch])
-
-    return inputs, input_mask, segment_ids, targets  # .unsqueeze(1)
-
-
-train_loader = DataLoader(train_set, 32, True, collate_fn=collate_fn)
-test_loader = DataLoader(test_set, 32, True, collate_fn=collate_fn)
-epoch = 20
-loss_list = []
-for epoch in tqdm.tqdm(range(epoch)):
-    model.train()
-    for inputs, input_mask, segment_ids, targets in train_loader:
-        inputs = inputs.to(device)
-        input_mask = input_mask.to(device)
-        segment_ids = segment_ids.to(device)
-        targets = targets.to(device)
-        x = {"input_ids": inputs, "attention_mask": input_mask}
-        y_hat = model(x)
-        loss = critiron(y_hat, targets)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-    evaluate(model, test_loader)
+trainer.train(10)
