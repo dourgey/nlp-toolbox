@@ -14,8 +14,8 @@ model = TextCNN(TextCNNConfig.from_config_file("../common/configs/textcnn.conf.t
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 criterion = torch.nn.CrossEntropyLoss().to(device)
 
-x = [torch.randint(0, 21128, (64, 128)).to(device), 0]
-y = torch.randint(0, 2, (64,)).to(device)
+x = [torch.randint(0, 21128, (640, 1280)).to(device), 0]
+y = torch.randint(0, 2, (640,)).to(device)
 
 model.train()
 now = time.time()
