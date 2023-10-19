@@ -68,7 +68,7 @@ class Trainer:
         for epoch in tqdm.tqdm(range(epoch_num)):
             self.epoch_num += 1
             torch.cuda.empty_cache()   # 清理GPU缓存
-            for x, y in tqdm.tqdm(self.train_loader):
+            for x, y in self.train_loader:
                 self.total_step += 1
                 x = [_x.to(self.device) for _x in x]
                 y = y.to(self.device)

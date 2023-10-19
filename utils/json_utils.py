@@ -1,6 +1,10 @@
 import json
+import sys
 from types import SimpleNamespace
 from typing import Any
+sys.path.append("../")
+
+import toml
 
 # author: shadowpower
 # github: https://github.com/ShadowPower
@@ -39,3 +43,9 @@ def obj_to_json(obj: Any) -> str:
     :return: JSON
     """
     return json.dumps(obj, default=lambda o: o.__dict__, ensure_ascii=False)
+
+
+if __name__ == '__main__':
+    with open('../common/configs/textcnn.conf.toml', 'r', encoding='utf-8') as f:
+        s = f.read()
+        print(toml.loads(s))

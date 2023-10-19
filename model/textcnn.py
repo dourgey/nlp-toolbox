@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
 
+
 from typing import List
 from model.model_config import ModelConfig
-
+from model.base_model import ModelForTextClassification
 
 class TextCNNConfig(ModelConfig):
     def __init__(self, num_classes, n_vocab, embedding_dim, num_filters, filter_sizes: List[int],
@@ -32,7 +33,7 @@ class TextCNNConfig(ModelConfig):
         self.dropout_prob = dropout_prob
 
 
-class TextCNN(nn.Module):
+class TextCNN(ModelForTextClassification):
     def __init__(self, config: TextCNNConfig):
         super(TextCNN, self).__init__()
         self.config = config
@@ -62,5 +63,5 @@ class TextCNN(nn.Module):
 
 
 if __name__ == '__main__':
-    config = TextCNNConfig.from_config_file(config_file='../common/configs/textcnn.conf')
+    config = TextCNNConfig.from_config_file(config_file='../common/configs/textcnn.conf.toml')
     print(config)

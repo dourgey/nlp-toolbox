@@ -18,7 +18,7 @@ with open("../common/configs/task.conf.toml", "r", encoding="utf-8") as f:
     task_config = toml.load(f)
 print(task_config)
 
-tokenizer = BertTokenizerFast("../recources/bert_vocab.txt")
+tokenizer = BertTokenizerFast("../resources/bert_vocab.txt")
 
 # 读取数据
 train_data = NLPDataset("iPhone/train.json", ClassificationBasePreProcessor(tokenizer=tokenizer, **task_config), tokenizer=tokenizer)

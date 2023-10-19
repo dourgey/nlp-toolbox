@@ -22,9 +22,9 @@ class ModelConfig():
         return config
 
     def __str__(self):
-        text = f"{'██' * 10} {self.__class__.__name__} {'██' * 10} \n"
+        text = f"{'==' * 10} {self.__class__.__name__} {'==' * 10} \n"
         for k in self.__dict__:
             text += f"▨\t{k}: {self.__dict__[k]}\n"
-        text += '█' * (len(f"{'==' * 10} {self.__class__.__name__} {'==' * 10} \n") - 2)
+        text += '=' * (len(f"{'==' * 10} {self.__class__.__name__} {'==' * 10} \n") - 2)
         return text
 
